@@ -1,36 +1,41 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
   <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <!-- Используем самые стабильные версии библиотек -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    
+    <!-- КРИТИЧНО: A-Frame ВСЕГДА подключается ПЕРВЫМ -->
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    
+    <!-- Подключаем MindAR специально для A-Frame -->
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-aframe.prod.js"></script>
     
     <style>
-      /* Убираем лишние элементы интерфейса, которые могут перекрывать экран */
       body { margin: 0; overflow: hidden; }
+      
+      /* Скрываем стандартный пользовательский интерфейс загрузки MindAR, чтобы он не вешал экран */
+      .mindar-ui-overlay { display: none !important; }
     </style>
   </head>
   <body>
     <!-- 
-      ВНИМАНИЕ: Для теста я заменил путь к вашему файлу на прямую ссылку на тестовый маркер.
-      Если это сработает, значит проблема в вашем файле .mind 
+      embedded - обязательно для встраивания в веб-страницу
+      vr-mode-ui="enabled: false" - отключает VR кнопку
     -->
     <a-scene mindar-image="imageTargetSrc: https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/examples/assets/card-example/card.mind;" 
+             embedded
              color-space="sRGB" 
              renderer="colorManagement: true, physicallyCorrectLights" 
              vr-mode-ui="enabled: false" 
              device-orientation-permission-ui="enabled: false">
       
-      <a-assets>
-        <!-- Пока вместо вашей модели используем красный куб, чтобы точно увидеть результат -->
-      </a-assets>
-
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
+      <!-- Тестовый объект: наводим на картинку с визиткой (ссылка ниже) -->
       <a-entity mindar-image-target="targetIndex: 0">
-        <a-box position="0 0 0" scale="0.5 0.5 0.5" material="color: red; opacity: 0.8"></a-box>
+        <!-- Красный куб, немного приподнятый -->
+        <a-box position="0 0.5 0" scale="0.5 0.5 0.5" material="color: red;"></a-box>
       </a-entity>
+      
     </a-scene>
   </body>
 </html>
