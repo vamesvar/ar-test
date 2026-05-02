@@ -60,3 +60,15 @@
     </script>
 </body>
 </html>
+
+// Событие: когда маркер найден
+anchor.onTargetFound = () => {
+    overlay.innerText = "Статус: МАРКЕР НАЙДЕН!";
+    overlay.style.background = "rgba(0, 255, 0, 0.5)";
+};
+
+// Событие: когда маркер потерян
+anchor.onTargetLost = () => {
+    overlay.innerText = "Статус: Поиск маркера...";
+    overlay.style.background = "rgba(255, 0, 0, 0.5)";
+};
