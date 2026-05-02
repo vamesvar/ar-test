@@ -3,8 +3,12 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
     <title>WebAR Local Test</title>
+    <!-- Оставляем твои рабочие библиотеки -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r123/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.5/dist/mindar-image-three.prod.js"></script>
+    <!-- ДОБАВЛЯЕМ загрузчик для 3D моделей той же версии r123 -->
+    <script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r123/examples/js/loaders/GLTFLoader.js"></script>
+    
     <style>
         body { margin: 0; overflow: hidden; background: #000; }
         #status {
@@ -22,22 +26,48 @@
 
         async function start() {
             try {
-                // ПРОВЕРКА: Пытаемся понять, видит ли браузер ваш файл
                 status.innerText = "Загрузка файла targets.mind...";
                 
                 const mindarThree = new window.MINDAR.IMAGE.MindARThree({
                     container: document.body,
-                    imageTargetSrc: './targets.mind', // Ищем файл в той же папке
+                    imageTargetSrc: './targets.mind',
                 });
 
                 const {renderer, scene, camera} = mindarThree;
 
-                // Создаем красный куб
-                const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-                const material = new THREE.MeshBasicMaterial({color: 0xff0000, transparent: true, opacity: 0.7});
-                const cube = new THREE.Mesh(geometry, material);
+                // --- ДОБАВЛЯЕМ СВЕТ (Важно для твоей модели!) ---
+                const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+                scene.add(ambientLight);
+                const directLight = new THREE.DirectionalLight(0xffffff, 1);
+                directLight.position.set(0, 10, 10);
+                scene.add(directLight);
 
                 const anchor = mindarThree.addAnchor(0);
+
+                // --- ЗАГРУЗКА ТВОЕЙ МОДЕЛИ ---
+                const loader = new THREE.GLTFLoader();
+                loader.load('./model.glb', (gltf) => {
+                    const model = gltf.scene;
+                    // Если модель 500к полигонов была сделана в Blender, 
+                    // она может быть огромной. Ставим масштаб 0.1 для начала.
+                    model.scale.set(0.1, 0.1, 0.1); 
+                    model.position.set(0, 0, 0);
+                    
+                    // Добавляем модель в якорь
+                    anchor.group.add(model);
+                    console.log("Модель загружена!");
+                }, 
+                (xhr) => {
+                    console.log((xhr.loaded / xhr.total * 100) + '% загружено');
+                },
+                (err) => {
+                    console.error("Ошибка загрузки модели", err);
+                });
+
+                // Оставляем твой куб как "маяк", чтобы видеть, что AR работает
+                const geometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
+                const material = new THREE.MeshBasicMaterial({color: 0xff0000, transparent: true, opacity: 0.5});
+                const cube = new THREE.Mesh(geometry, material);
                 anchor.group.add(cube);
 
                 anchor.onTargetFound = () => {
@@ -46,12 +76,12 @@
                 };
 
                 anchor.onTargetLost = () => {
-                    status.innerText = "Маркер потерян. Ищу снова...";
+                    status.innerText = "Маркер потерян...";
                     status.style.background = "rgba(0,0,0,0.7)";
                 };
 
                 await mindarThree.start();
-                status.innerText = "Камера включена. Наведите на ВАШУ картинку";
+                status.innerText = "Камера готова. Наведите на картинку";
 
                 renderer.setAnimationLoop(() => {
                     renderer.render(scene, camera);
@@ -59,7 +89,6 @@
 
             } catch (e) {
                 status.innerText = "ОШИБКА: " + e.message;
-                console.error("Детали ошибки:", e);
             }
         }
 
