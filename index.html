@@ -2,75 +2,50 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-    <title>WebAR Fix</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r123/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.5/dist/mindar-image-three.prod.js"></script>
-    
+    <!-- Подключаем только проверенные версии -->
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
     <style>
-        /* Убираем черный фон, чтобы видеть камеру */
-        body { margin: 0; overflow: hidden; background-color: transparent; }
-        
-        /* Гарантируем, что видео и холст занимают весь экран */
-        canvas { position: absolute; top: 0; left: 0; z-index: 2; }
-        video { position: absolute; top: 0; left: 0; z-index: 1; }
-
-        #status {
-            position: absolute; top: 0; left: 0; width: 100%;
-            background: rgba(0,0,0,0.6); color: white;
-            padding: 15px; font-family: sans-serif; text-align: center; z-index: 10;
+        body { margin: 0; overflow: hidden; }
+        /* Индикатор загрузки */
+        .loading {
+            position: absolute; z-index: 100; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); color: white;
+            display: flex; justify-content: center; align-items: center;
+            font-family: sans-serif;
         }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
-    <div id="status">Запуск системы...</div>
+    <div id="loader" class="loading">Инициализация AR... Подождите...</div>
+
+    <!-- Настройка сцены -->
+    <a-scene 
+        mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; uiLoading: no; uiScanning: yes;" 
+        embedded color-space="sRGB" 
+        renderer="colorManagement: true, physicallyCorrectLights: true" 
+        vr-mode-ui="enabled: false" 
+        device-orientation-permission-ui="enabled: false">
+        
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+        <!-- Якорь для первого маркера -->
+        <a-entity mindar-image-target="targetIndex: 0">
+            <!-- Красный куб, который точно будет виден -->
+            <a-box color="red" scale="0.3 0.3 0.3" position="0 0 0"
+                   animation="property: rotation; to: 0 360 0; dur: 2000; easing: linear; loop: true">
+            </a-box>
+        </a-entity>
+    </a-scene>
 
     <script>
-        const status = document.getElementById('status');
-
-       async function start() {
-            try {
-                const mindarThree = new window.MINDAR.IMAGE.MindARThree({
-                    container: document.body,
-                    imageTargetSrc: './targets.mind',
-                });
-
-                const {renderer, scene, camera} = mindarThree;
-                renderer.setClearColor(0x000000, 0);
-
-                // СОЗДАЕМ ОГРОМНЫЙ КРАСНЫЙ КУБ
-                const geometry = new THREE.BoxGeometry(2, 2, 2); // Размер 2 метра!
-                const material = new THREE.MeshBasicMaterial({
-                    color: 0xff0000, 
-                    side: THREE.DoubleSide // Виден даже изнутри
-                });
-                const cube = new THREE.Mesh(geometry, material);
-
-                // Добавляем его прямо в СЦЕНУ, а не в якорь (для теста)
-                // Он должен появиться ПРЯМО ПЕРЕД ТОБОЙ при запуске
-                cube.position.set(0, 0, -5); 
-                scene.add(cube);
-
-                const anchor = mindarThree.addAnchor(0);
-                // А в якорь добавим синий шар
-                const ballGeom = new THREE.SphereGeometry(0.2);
-                const ballMat = new THREE.MeshBasicMaterial({color: 0x0000ff});
-                const ball = new THREE.Mesh(ballGeom, ballMat);
-                anchor.group.add(ball);
-
-                anchor.onTargetFound = () => {
-                    status.innerText = "НАЙДЕН! Ищи синий шар!";
-                    status.style.background = "green";
-                };
-
-                await mindarThree.start();
-                status.innerText = "Смотри по сторонам, ищи КРАСНЫЙ КУБ";
-
-                renderer.setAnimationLoop(() => {
-                    cube.rotation.y += 0.01;
-                    renderer.render(scene, camera);
-                });
-
-            } catch (e) {
-                status.innerText = "ОШИБКА: " + e.message;
-            }
-        }
+        // Убираем экран загрузки, когда сцена готова
+        const sceneEl = document.querySelector('a-scene');
+        const loader = document.querySelector('#loader');
+        sceneEl.addEventListener("renderstart", () => {
+            loader.classList.add('hidden');
+        });
+    </script>
+</body>
+</html>
