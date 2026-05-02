@@ -2,71 +2,61 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-    <title>WebAR Project</title>
-    <!-- Загружаем только базовый A-Frame -->
-    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <title>WebAR Stable</title>
+    <!-- Загружаем библиотеки по отдельности -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r123/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.5/dist/mindar-image-three.prod.js"></script>
+    
     <style>
-        body { margin: 0; overflow: hidden; font-family: sans-serif; }
-        #loading-screen {
-            position: absolute; z-index: 1000;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: #222; color: white;
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
+        body { margin: 0; overflow: hidden; background-color: #000; }
+        canvas { width: 100vw; height: 100vh; }
+        #overlay {
+            position: absolute; top: 10px; left: 10px; color: white;
+            background: rgba(0,0,0,0.5); padding: 10px; font-family: sans-serif;
         }
     </style>
 </head>
 <body>
-    <div id="loading-screen">
-        <p>Инициализация систем...</p>
-    </div>
+    <div id="overlay">Статус: Инициализация...</div>
 
     <script>
-        // Функция для принудительной загрузки скрипта
-        function loadScript(src) {
-            return new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                script.src = src;
-                script.onload = resolve;
-                script.onerror = reject;
-                document.head.appendChild(script);
-            });
+        const overlay = document.getElementById('overlay');
+
+        async function start() {
+            try {
+                // 1. Настройка MindAR
+                const mindarThree = new window.MINDAR.IMAGE.MindARThree({
+                    container: document.body,
+                    imageTargetSrc: 'https://cdn.jsdelivr.net/npm/mind-ar@1.1.5/examples/assets/card-example/card.mind',
+                });
+
+                const {renderer, scene, camera} = mindarThree;
+
+                // 2. Создаем визуальный объект (зеленый куб)
+                const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+                const material = new THREE.MeshBasicMaterial({color: 0x00ff00, transparent: true, opacity: 0.8});
+                const cube = new THREE.Mesh(geometry, material);
+
+                // 3. Создаем "якорь" для первой картинки в таргете
+                const anchor = mindarThree.addAnchor(0);
+                anchor.group.add(cube);
+
+                // 4. Запуск
+                overlay.innerText = "Статус: Камера готова. Наведите на маркер.";
+                await mindarThree.start();
+
+                renderer.setAnimationLoop(() => {
+                    renderer.render(scene, camera);
+                });
+
+            } catch (e) {
+                overlay.innerText = "Ошибка: " + e.message;
+                console.error(e);
+            }
         }
 
-        // Логика последовательного запуска
-        window.onload = async () => {
-            const statusText = document.querySelector('#loading-screen p');
-            
-            try {
-                statusText.innerText = "Загрузка AR-движка...";
-                // Ждем, пока загрузится MindAR после того, как A-Frame уже в памяти
-                await loadScript("https://cdn.jsdelivr.net/npm/mind-ar@1.1.5/dist/mindar-image-aframe.prod.js");
-                
-                statusText.innerText = "Запуск камеры...";
-                
-                // Создаем сцену динамически, чтобы MindAR не "ругался" на пустой AFRAME
-                const sceneHTML = `
-                    <a-scene mindar-image="imageTargetSrc: https://cdn.jsdelivr.net/npm/mind-ar@1.1.5/examples/assets/card-example/card.mind; autoStart: true; uiLoading: no;" 
-                             embedded color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" 
-                             vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
-                        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-                        <a-entity mindar-image-target="targetIndex: 0">
-                            <a-sphere position="0 0 0" radius="0.3" material="color: #00FF00;"></a-sphere>
-                        </a-entity>
-                    </a-scene>
-                `;
-                document.body.insertAdjacentHTML('beforeend', sceneHTML);
-                
-                // Скрываем экран загрузки через 2 секунды после старта
-                setTimeout(() => {
-                    document.getElementById('loading-screen').style.display = 'none';
-                }, 2000);
-
-            } catch (err) {
-                statusText.innerText = "Ошибка загрузки: " + err;
-                console.error(err);
-            }
-        };
+        // Запускаем всё после загрузки страницы
+        window.addEventListener('load', start);
     </script>
 </body>
 </html>
