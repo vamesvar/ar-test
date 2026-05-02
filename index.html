@@ -1,41 +1,29 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
   <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-    
-    <!-- КРИТИЧНО: A-Frame ВСЕГДА подключается ПЕРВЫМ -->
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-    
-    <!-- Подключаем MindAR специально для A-Frame -->
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/dist/mindar-image-aframe.prod.js"></script>
-    
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.5/dist/mindar-image-aframe.prod.js"></script>
     <style>
       body { margin: 0; overflow: hidden; }
-      
-      /* Скрываем стандартный пользовательский интерфейс загрузки MindAR, чтобы он не вешал экран */
-      .mindar-ui-overlay { display: none !important; }
     </style>
   </head>
   <body>
-    <!-- 
-      embedded - обязательно для встраивания в веб-страницу
-      vr-mode-ui="enabled: false" - отключает VR кнопку
-    -->
-    <a-scene mindar-image="imageTargetSrc: https://cdn.jsdelivr.net/npm/mind-ar@1.1.4/examples/assets/card-example/card.mind;" 
-             embedded
-             color-space="sRGB" 
-             renderer="colorManagement: true, physicallyCorrectLights" 
-             vr-mode-ui="enabled: false" 
-             device-orientation-permission-ui="enabled: false">
+    <!-- Мы добавили параметр mindar-image, указав путь к тестовому маркеру напрямую -->
+    <a-scene 
+      mindar-image="imageTargetSrc: https://cdn.jsdelivr.net/npm/mind-ar@1.1.5/examples/assets/card-example/card.mind;" 
+      embedded 
+      color-space="sRGB" 
+      renderer="colorManagement: true, physicallyCorrectLights" 
+      vr-mode-ui="enabled: false" 
+      device-orientation-permission-ui="enabled: false">
       
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-      <!-- Тестовый объект: наводим на картинку с визиткой (ссылка ниже) -->
+      <!-- Индекс 0 — это первая картинка в .mind файле -->
       <a-entity mindar-image-target="targetIndex: 0">
-        <!-- Красный куб, немного приподнятый -->
-        <a-box position="0 0.5 0" scale="0.5 0.5 0.5" material="color: red;"></a-box>
+        <a-box position="0 0 0.1" scale="0.5 0.5 0.5" material="color: blue; opacity: 0.9"></a-box>
       </a-entity>
-      
     </a-scene>
   </body>
 </html>
