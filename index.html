@@ -2,73 +2,68 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-    <title>WebAR Stable</title>
-    <!-- Загружаем библиотеки по отдельности -->
+    <title>WebAR Local Test</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r123/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.5/dist/mindar-image-three.prod.js"></script>
-    
     <style>
-        body { margin: 0; overflow: hidden; background-color: #000; }
-        canvas { width: 100vw; height: 100vh; }
-        #overlay {
-            position: absolute; top: 10px; left: 10px; color: white;
-            background: rgba(0,0,0,0.5); padding: 10px; font-family: sans-serif;
+        body { margin: 0; overflow: hidden; background: #000; }
+        #status {
+            position: absolute; top: 0; left: 0; width: 100%;
+            background: rgba(0,0,0,0.7); color: white;
+            padding: 15px; font-family: sans-serif; text-align: center; z-index: 10;
         }
     </style>
 </head>
 <body>
-    <div id="overlay">Статус: Инициализация...</div>
+    <div id="status">Инициализация...</div>
 
     <script>
-        const overlay = document.getElementById('overlay');
+        const status = document.getElementById('status');
 
         async function start() {
             try {
-                // 1. Настройка MindAR
+                // ПРОВЕРКА: Пытаемся понять, видит ли браузер ваш файл
+                status.innerText = "Загрузка файла targets.mind...";
+                
                 const mindarThree = new window.MINDAR.IMAGE.MindARThree({
                     container: document.body,
-                    imageTargetSrc: 'https://cdn.jsdelivr.net/npm/mind-ar@1.1.5/examples/assets/card-example/card.mind',
+                    imageTargetSrc: './targets.mind', // Ищем файл в той же папке
                 });
 
                 const {renderer, scene, camera} = mindarThree;
 
-                // 2. Создаем визуальный объект (зеленый куб)
+                // Создаем красный куб
                 const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-                const material = new THREE.MeshBasicMaterial({color: 0x00ff00, transparent: true, opacity: 0.8});
+                const material = new THREE.MeshBasicMaterial({color: 0xff0000, transparent: true, opacity: 0.7});
                 const cube = new THREE.Mesh(geometry, material);
 
-                // 3. Создаем "якорь" для первой картинки в таргете
                 const anchor = mindarThree.addAnchor(0);
                 anchor.group.add(cube);
 
-                // 4. Запуск
-                overlay.innerText = "Статус: Камера готова. Наведите на маркер.";
+                anchor.onTargetFound = () => {
+                    status.innerText = "МАРКЕР НАЙДЕН!";
+                    status.style.background = "green";
+                };
+
+                anchor.onTargetLost = () => {
+                    status.innerText = "Маркер потерян. Ищу снова...";
+                    status.style.background = "rgba(0,0,0,0.7)";
+                };
+
                 await mindarThree.start();
+                status.innerText = "Камера включена. Наведите на ВАШУ картинку";
 
                 renderer.setAnimationLoop(() => {
                     renderer.render(scene, camera);
                 });
 
             } catch (e) {
-                overlay.innerText = "Ошибка: " + e.message;
-                console.error(e);
+                status.innerText = "ОШИБКА: " + e.message;
+                console.error("Детали ошибки:", e);
             }
         }
 
-        // Запускаем всё после загрузки страницы
         window.addEventListener('load', start);
     </script>
 </body>
 </html>
-
-// Событие: когда маркер найден
-anchor.onTargetFound = () => {
-    overlay.innerText = "Статус: МАРКЕР НАЙДЕН!";
-    overlay.style.background = "rgba(0, 255, 0, 0.5)";
-};
-
-// Событие: когда маркер потерян
-anchor.onTargetLost = () => {
-    overlay.innerText = "Статус: Поиск маркера...";
-    overlay.style.background = "rgba(255, 0, 0, 0.5)";
-};
