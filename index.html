@@ -2,50 +2,28 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-    <!-- Подключаем только проверенные версии -->
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
-    <style>
-        body { margin: 0; overflow: hidden; }
-        /* Индикатор загрузки */
-        .loading {
-            position: absolute; z-index: 100; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); color: white;
-            display: flex; justify-content: center; align-items: center;
-            font-family: sans-serif;
-        }
-        .hidden { display: none; }
-    </style>
 </head>
-<body>
-    <div id="loader" class="loading">Инициализация AR... Подождите...</div>
+<body style="margin: 0; overflow: hidden;">
 
-    <!-- Настройка сцены -->
     <a-scene 
-        mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; uiLoading: no; uiScanning: yes;" 
-        embedded color-space="sRGB" 
-        renderer="colorManagement: true, physicallyCorrectLights: true" 
-        vr-mode-ui="enabled: false" 
-        device-orientation-permission-ui="enabled: false">
+        mindar-image="imageTargetSrc: https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/examples/assets/card-example/card.mind;" 
+        embedded color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" 
+        vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
         
         <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-        <!-- Якорь для первого маркера -->
         <a-entity mindar-image-target="targetIndex: 0">
-            <!-- Красный куб, который точно будет виден -->
-            <a-box color="red" scale="0.3 0.3 0.3" position="0 0 0"
-                   animation="property: rotation; to: 0 360 0; dur: 2000; easing: linear; loop: true">
-            </a-box>
+            <!-- Синий шар для проверки -->
+            <a-sphere color="blue" radius="0.2" position="0 0 0"></a-sphere>
+            
+            <!-- Легкая модель енота (тестовая) -->
+            <a-gltf-model rotation="0 0 0" position="0 -0.25 0" scale="0.05 0.05 0.05" 
+                src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/examples/assets/card-example/softmind/scene.gltf">
+            </a-gltf-model>
         </a-entity>
     </a-scene>
 
-    <script>
-        // Убираем экран загрузки, когда сцена готова
-        const sceneEl = document.querySelector('a-scene');
-        const loader = document.querySelector('#loader');
-        sceneEl.addEventListener("renderstart", () => {
-            loader.classList.add('hidden');
-        });
-    </script>
 </body>
 </html>
