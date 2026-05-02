@@ -2,13 +2,11 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-    <title>WebAR Local Test</title>
-    <!-- Оставляем твои рабочие библиотеки -->
+    <title>WebAR Final Test</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r123/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.5/dist/mindar-image-three.prod.js"></script>
-    <!-- ДОБАВЛЯЕМ загрузчик для 3D моделей той же версии r123 -->
+    <!-- Загрузчик для моделей -->
     <script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r123/examples/js/loaders/GLTFLoader.js"></script>
-    
     <style>
         body { margin: 0; overflow: hidden; background: #000; }
         #status {
@@ -26,40 +24,42 @@
 
         async function start() {
             try {
-                status.innerText = "Загрузка файла targets.mind...";
+                status.innerText = "Загрузка маркера...";
                 
                 const mindarThree = new window.MINDAR.IMAGE.MindARThree({
                     container: document.body,
-                    imageTargetSrc: './targets.mind',
+                    imageTargetSrc: './targets.mind', 
                 });
 
                 const {renderer, scene, camera} = mindarThree;
 
-                // --- ДОБАВЛЯЕМ СВЕТ (Важно для твоей модели!) ---
-                const ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
+                // 1. ДОБАВЛЯЕМ СВЕТ (обязательно для модели)
+                const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
                 scene.add(ambientLight);
-                const directLight = new THREE.DirectionalLight(0xffffff, 1);
+                const directLight = new THREE.DirectionalLight(0xffffff, 1.0);
                 directLight.position.set(0, 10, 10);
                 scene.add(directLight);
 
                 const anchor = mindarThree.addAnchor(0);
 
-                // --- ЗАГРУЗКА ТВОЕЙ МОДЕЛИ ---
+                // 2. СОЗДАЕМ ТЕСТОВЫЙ КРАСНЫЙ КУБ
+                const geometry = new THREE.BoxGeometry(0.3, 0.3, 0.3);
+                const material = new THREE.MeshStandardMaterial({color: 0xff0000, transparent: true, opacity: 0.8});
+                const testCube = new THREE.Mesh(geometry, material);
+                anchor.group.add(testCube);
+
+                // 3. ЗАГРУЖАЕМ ТВОЮ МОДЕЛЬ
                 const loader = new THREE.GLTFLoader();
-
-loader.load('https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Duck/glTF-Binary/Duck.glb', (gltf) => {
-    const model = gltf.scene;
-    model.scale.set(0.2, 0.2, 0.2); // Утка маленькая, 0.2 будет в самый раз
-    anchor.group.add(model);
-    console.log("Утка из интернета приплыла!");
-});
-                            
-
-                // Оставляем твой куб как "маяк", чтобы видеть, что AR работает
-                const geometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
-                const material = new THREE.MeshBasicMaterial({color: 0xff0000, transparent: true, opacity: 0.5});
-                const cube = new THREE.Mesh(geometry, material);
-                anchor.group.add(cube);
+                loader.load('./model.glb', (gltf) => {
+                    const model = gltf.scene;
+                    // Делаем её небольшой, чтобы не "съела" камеру
+                    model.scale.set(0.1, 0.1, 0.1); 
+                    model.position.set(0, 0, 0);
+                    anchor.group.add(model);
+                    console.log("Модель загружена");
+                }, undefined, (error) => {
+                    console.error("Ошибка загрузки модели:", error);
+                });
 
                 anchor.onTargetFound = () => {
                     status.innerText = "МАРКЕР НАЙДЕН!";
@@ -67,14 +67,16 @@ loader.load('https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/m
                 };
 
                 anchor.onTargetLost = () => {
-                    status.innerText = "Маркер потерян...";
+                    status.innerText = "Поиск маркера...";
                     status.style.background = "rgba(0,0,0,0.7)";
                 };
 
                 await mindarThree.start();
-                status.innerText = "Камера готова. Наведите на картинку";
+                status.innerText = "Наведите на маркер";
 
+                // Анимация вращения куба (чтобы его было легче заметить)
                 renderer.setAnimationLoop(() => {
+                    testCube.rotation.y += 0.02;
                     renderer.render(scene, camera);
                 });
 
