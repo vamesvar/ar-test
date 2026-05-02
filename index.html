@@ -2,107 +2,79 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-    <title>WebAR Final Test</title>
+    <title>WebAR Fix</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r123/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.5/dist/mindar-image-three.prod.js"></script>
-    <!-- Загрузчик для моделей -->
-    <script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r123/examples/js/loaders/GLTFLoader.js"></script>
+    
     <style>
-        body { margin: 0; overflow: hidden; background: #000; }
+        /* Убираем черный фон, чтобы видеть камеру */
+        body { margin: 0; overflow: hidden; background-color: transparent; }
+        
+        /* Гарантируем, что видео и холст занимают весь экран */
+        canvas { position: absolute; top: 0; left: 0; z-index: 2; }
+        video { position: absolute; top: 0; left: 0; z-index: 1; }
+
         #status {
             position: absolute; top: 0; left: 0; width: 100%;
-            background: rgba(0,0,0,0.7); color: white;
+            background: rgba(0,0,0,0.6); color: white;
             padding: 15px; font-family: sans-serif; text-align: center; z-index: 10;
         }
-        canvas {
-    z-index: 5 !important;
-    position: absolute;
-    top: 0;
-    left: 0;
-}
-video {
-    z-index: 1;
-    position: absolute;
-    top: 0;
-    left: 0;
-}
     </style>
 </head>
 <body>
-    <div id="status">Инициализация...</div>
+    <div id="status">Запуск системы...</div>
 
     <script>
         const status = document.getElementById('status');
 
         async function start() {
             try {
-                status.innerText = "Загрузка маркера...";
-                
+                // Инициализация MindAR
                 const mindarThree = new window.MINDAR.IMAGE.MindARThree({
-    container: document.body,
-    imageTargetSrc: './targets.mind',
-    filterMinCF: 0.0001, // Улучшает стабильность
-    filterBeta: 0.001,
-    uiLoading: "no",
-    uiScanning: "no"
-});
-
-// ПРИНУДИТЕЛЬНО задаем размер рендерера
-const {renderer, scene, camera} = mindarThree;
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(window.devicePixelRatio);
+                    container: document.body,
+                    imageTargetSrc: './targets.mind', 
+                });
 
                 const {renderer, scene, camera} = mindarThree;
 
-                // 1. ДОБАВЛЯЕМ СВЕТ (обязательно для модели)
-                const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
-                scene.add(ambientLight);
-                const directLight = new THREE.DirectionalLight(0xffffff, 1.0);
-                directLight.position.set(0, 10, 10);
-                scene.add(directLight);
+                // Настройка рендерера для прозрачности (чтобы видеть видео)
+                renderer.setClearColor(0x000000, 0); 
 
+                // Создаем КУБ-МАЯК (Красный, яркий)
+                const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+                const material = new THREE.MeshBasicMaterial({color: 0xff0000});
+                const cube = new THREE.Mesh(geometry, material);
+
+                // Привязываем куб к первому маркеру
                 const anchor = mindarThree.addAnchor(0);
+                anchor.group.add(cube);
 
-                // 2. СОЗДАЕМ ТЕСТОВЫЙ КРАСНЫЙ КУБ
-                const geometry = new THREE.BoxGeometry(0.3, 0.3, 0.3);
-                const material = new THREE.MeshStandardMaterial({color: 0xff0000, transparent: true, opacity: 0.8});
-                const testCube = new THREE.Mesh(geometry, material);
-                anchor.group.add(testCube);
-
-                // 3. ЗАГРУЖАЕМ ТВОЮ МОДЕЛЬ
-                const loader = new THREE.GLTFLoader();
-                loader.load('./model.glb', (gltf) => {
-                    const model = gltf.scene;
-                    // Делаем её небольшой, чтобы не "съела" камеру
-                    model.scale.set(0.1, 0.1, 0.1); 
-                    model.position.set(0, 0, 0);
-                    anchor.group.add(model);
-                    console.log("Модель загружена");
-                }, undefined, (error) => {
-                    console.error("Ошибка загрузки модели:", error);
-                });
-
+                // Обработка событий
                 anchor.onTargetFound = () => {
                     status.innerText = "МАРКЕР НАЙДЕН!";
                     status.style.background = "green";
                 };
 
                 anchor.onTargetLost = () => {
-                    status.innerText = "Поиск маркера...";
-                    status.style.background = "rgba(0,0,0,0.7)";
+                    status.innerText = "Ищу маркер...";
+                    status.style.background = "rgba(0,0,0,0.6)";
                 };
 
+                // Запуск
+                status.innerText = "Включаю камеру...";
                 await mindarThree.start();
-                status.innerText = "Наведите на маркер";
+                
+                status.innerText = "Камера работает. Наведи на маркер!";
 
-                // Анимация вращения куба (чтобы его было легче заметить)
+                // Цикл рендеринга
                 renderer.setAnimationLoop(() => {
-                    testCube.rotation.y += 0.02;
+                    cube.rotation.y += 0.03; // Куб будет крутиться
                     renderer.render(scene, camera);
                 });
 
             } catch (e) {
                 status.innerText = "ОШИБКА: " + e.message;
+                console.error(e);
             }
         }
 
