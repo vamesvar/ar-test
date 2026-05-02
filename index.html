@@ -46,23 +46,14 @@
 
                 // --- ЗАГРУЗКА ТВОЕЙ МОДЕЛИ ---
                 const loader = new THREE.GLTFLoader();
-                loader.load('./model.glb', (gltf) => {
-                    const model = gltf.scene;
-                    // Если модель 500к полигонов была сделана в Blender, 
-                    // она может быть огромной. Ставим масштаб 0.1 для начала.
-                    model.scale.set(0.1, 0.1, 0.1); 
-                    model.position.set(0, 0, 0);
-                    
-                    // Добавляем модель в якорь
-                    anchor.group.add(model);
-                    console.log("Модель загружена!");
-                }, 
-                (xhr) => {
-                    console.log((xhr.loaded / xhr.total * 100) + '% загружено');
-                },
-                (err) => {
-                    console.error("Ошибка загрузки модели", err);
-                });
+
+loader.load('https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Duck/glTF-Binary/Duck.glb', (gltf) => {
+    const model = gltf.scene;
+    model.scale.set(0.2, 0.2, 0.2); // Утка маленькая, 0.2 будет в самый раз
+    anchor.group.add(model);
+    console.log("Утка из интернета приплыла!");
+});
+                            
 
                 // Оставляем твой куб как "маяк", чтобы видеть, что AR работает
                 const geometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
