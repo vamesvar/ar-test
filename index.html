@@ -27,58 +27,50 @@
     <script>
         const status = document.getElementById('status');
 
-        async function start() {
+       async function start() {
             try {
-                // Инициализация MindAR
                 const mindarThree = new window.MINDAR.IMAGE.MindARThree({
                     container: document.body,
-                    imageTargetSrc: './targets.mind', 
+                    imageTargetSrc: './targets.mind',
                 });
 
                 const {renderer, scene, camera} = mindarThree;
+                renderer.setClearColor(0x000000, 0);
 
-                // Настройка рендерера для прозрачности (чтобы видеть видео)
-                renderer.setClearColor(0x000000, 0); 
-
-                // Создаем КУБ-МАЯК (Красный, яркий)
-                const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-                const material = new THREE.MeshBasicMaterial({color: 0xff0000});
+                // СОЗДАЕМ ОГРОМНЫЙ КРАСНЫЙ КУБ
+                const geometry = new THREE.BoxGeometry(2, 2, 2); // Размер 2 метра!
+                const material = new THREE.MeshBasicMaterial({
+                    color: 0xff0000, 
+                    side: THREE.DoubleSide // Виден даже изнутри
+                });
                 const cube = new THREE.Mesh(geometry, material);
 
-                // Привязываем куб к первому маркеру
-                const anchor = mindarThree.addAnchor(0);
-                anchor.group.add(cube);
+                // Добавляем его прямо в СЦЕНУ, а не в якорь (для теста)
+                // Он должен появиться ПРЯМО ПЕРЕД ТОБОЙ при запуске
+                cube.position.set(0, 0, -5); 
+                scene.add(cube);
 
-                // Обработка событий
+                const anchor = mindarThree.addAnchor(0);
+                // А в якорь добавим синий шар
+                const ballGeom = new THREE.SphereGeometry(0.2);
+                const ballMat = new THREE.MeshBasicMaterial({color: 0x0000ff});
+                const ball = new THREE.Mesh(ballGeom, ballMat);
+                anchor.group.add(ball);
+
                 anchor.onTargetFound = () => {
-                    status.innerText = "МАРКЕР НАЙДЕН!";
+                    status.innerText = "НАЙДЕН! Ищи синий шар!";
                     status.style.background = "green";
                 };
 
-                anchor.onTargetLost = () => {
-                    status.innerText = "Ищу маркер...";
-                    status.style.background = "rgba(0,0,0,0.6)";
-                };
-
-                // Запуск
-                status.innerText = "Включаю камеру...";
                 await mindarThree.start();
-                
-                status.innerText = "Камера работает. Наведи на маркер!";
+                status.innerText = "Смотри по сторонам, ищи КРАСНЫЙ КУБ";
 
-                // Цикл рендеринга
                 renderer.setAnimationLoop(() => {
-                    cube.rotation.y += 0.03; // Куб будет крутиться
+                    cube.rotation.y += 0.01;
                     renderer.render(scene, camera);
                 });
 
             } catch (e) {
                 status.innerText = "ОШИБКА: " + e.message;
-                console.error(e);
             }
         }
-
-        window.addEventListener('load', start);
-    </script>
-</body>
-</html>
