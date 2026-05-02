@@ -1,29 +1,58 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <!-- 1. Сначала грузим только ядро A-Frame -->
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.5/dist/mindar-image-aframe.prod.js"></script>
-    <style>
-      body { margin: 0; overflow: hidden; }
-    </style>
-  </head>
-  <body>
-    <!-- Мы добавили параметр mindar-image, указав путь к тестовому маркеру напрямую -->
-    <a-scene 
-      mindar-image="imageTargetSrc: https://cdn.jsdelivr.net/npm/mind-ar@1.1.5/examples/assets/card-example/card.mind;" 
-      embedded 
-      color-space="sRGB" 
-      renderer="colorManagement: true, physicallyCorrectLights" 
-      vr-mode-ui="enabled: false" 
-      device-orientation-permission-ui="enabled: false">
-      
-      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+    
+    <script>
+        // Этот скрипт — «предохранитель». 
+        // Если MindAR загрузится слишком рано, мы подготовим для него почву.
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log("DOM готов, проверяем AFRAME...");
+        });
+    </script>
 
-      <!-- Индекс 0 — это первая картинка в .mind файле -->
-      <a-entity mindar-image-target="targetIndex: 0">
-        <a-box position="0 0 0.1" scale="0.5 0.5 0.5" material="color: blue; opacity: 0.9"></a-box>
-      </a-entity>
+    <!-- 2. Грузим MindAR только после того, как A-Frame точно на месте -->
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.5/dist/mindar-image-aframe.prod.js"></script>
+
+    <style>
+        body { margin: 0; overflow: hidden; }
+        /* Показываем сообщение, пока камера грузится */
+        #loading-screen {
+            position: absolute; z-index: 999;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: white; display: flex;
+            justify-content: center; align-items: center;
+            font-family: sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading-screen">Загрузка AR системы...</div>
+
+    <a-scene 
+        mindar-image="imageTargetSrc: https://cdn.jsdelivr.net/npm/mind-ar@1.1.5/examples/assets/card-example/card.mind; uiLoading: no;" 
+        embedded 
+        color-space="sRGB" 
+        renderer="colorManagement: true, physicallyCorrectLights" 
+        vr-mode-ui="enabled: false" 
+        device-orientation-permission-ui="enabled: false">
+        
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+        <a-entity mindar-image-target="targetIndex: 0">
+            <!-- Синий шар для теста -->
+            <a-sphere position="0 0 0" radius="0.3" material="color: #4CC3D9; opacity: 0.9"></a-sphere>
+        </a-entity>
     </a-scene>
-  </body>
+
+    <script>
+        // Убираем загрузочный экран, когда сцена готова
+        const sceneEl = document.querySelector('a-scene');
+        sceneEl.addEventListener('renderstart', () => {
+            document.getElementById('loading-screen').style.display = 'none';
+        });
+    </script>
+</body>
 </html>
