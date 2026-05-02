@@ -3,8 +3,12 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
     <title>WebAR Local Test</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r123/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.5/dist/mindar-image-three.prod.js"></script>
+    <!-- Используем стабильную версию r123, с которой MindAR дружит -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r123/three.min.js"></script>
+<!-- Загрузчик моделей тоже должен быть от версии r123 -->
+<script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r123/examples/js/loaders/GLTFLoader.js"></script>
+<!-- MindAR для Three.js -->
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.5/dist/mindar-image-three.prod.js"></script>
     <style>
         body { margin: 0; overflow: hidden; background: #000; }
         #status {
